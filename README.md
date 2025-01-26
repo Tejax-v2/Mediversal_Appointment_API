@@ -57,12 +57,7 @@ Start the Application:
 python app.py
 ```
 
-**Access the API**: Open your browser or API testing tool (e.g., Postman) and go to http://127.0.0.1:5000.
-
-**Swagger Documentation**: The Swagger documentation is available at:
-```bash
-http://127.0.0.1:5000/swagger
-```
+**Access the API**: Open your browser or API testing tool (e.g., Postman) and go to http://127.0.0.1:5000/apidocs.
 
 ## Docker Instructions
 Build the Docker Image
@@ -73,9 +68,6 @@ Run the Docker Container
 ```bash
 docker run -d -p 5000:5000 hospital-appointment-api
 ```
-### Access the Application
-
-Visit http://127.0.0.1:5000 to use the API.
 
 ## API Documentation
 
@@ -83,7 +75,7 @@ Visit http://127.0.0.1:5000/apidocs/ to view API documentation
 
 ## PPT Link
 
-Access the project presentation here: Hospital Appointment Management System PPT
+Access the project presentation here: [Google Slides](https://docs.google.com/presentation/d/12XQTiOK7sTt9o5v--tWVLAuYhcvivzvU8Yo6wwtfHxQ/edit?usp=sharing)
 
 Credits
 
