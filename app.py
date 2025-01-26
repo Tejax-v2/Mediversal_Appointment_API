@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -20,7 +20,7 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     def __repr__(self):
         return f"User('{self.name}', '{self.email}', '{self.phone}')"
-    
+
 class Doctor(Base):
     __tablename__ = 'doctor'
     doctor_id = Column(Integer, primary_key=True)
@@ -30,8 +30,8 @@ class Doctor(Base):
     specialization = Column(String(length=100))
     created_at = Column(DateTime, default=func.now())
     def __repr__(self):
-        return f"Doctor('{self.name}', '{self.email}', '{self.phone}', '{self.specialization}'"
-    
+        return f"Doctor('{self.name}', '{self.email}', '{self.phone}', '{self.specialization}')"
+
 class Appointment(Base):
     __tablename__ = 'appointment'
     apt_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -41,8 +41,8 @@ class Appointment(Base):
     end_time = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=func.now())
     def __repr__(self):
-        return f"Appointment('{self.user_id}', '{self.doctor_id}', '{self.start_time}', '{self.end_time}'"
-    
+        return f"Appointment('{self.user_id}', '{self.doctor_id}', '{self.start_time}', '{self.end_time}')"
+
 engine = create_engine(DATABASE_URL)
 Base.metadata.create_all(engine)
 
@@ -51,23 +51,84 @@ session = Session()
 
 class UserAppointments(Resource):
     def get(self, user_id):
-        return {"msg":"UserAppointments", "user":user_id}
+        appointments = session.query(Appointment).filter_by(user_id=user_id).all()
+        if not appointments:
+            return {"msg": "No appointments found for the user."}, 404
+
+        result = [
+            {
+                "apt_id": apt.apt_id,
+                "doctor_id": apt.doctor_id,
+                "start_time": apt.start_time,
+                "end_time": apt.end_time,
+                "created_at": apt.created_at
+            } for apt in appointments
+        ]
+        return jsonify(result)
 
 class DoctorAppointments(Resource):
     def get(self, doctor_id):
-        return {"msg":"DoctorAppointments", "doctor":doctor_id}
+        appointments = session.query(Appointment).filter_by(doctor_id=doctor_id).all()
+        if not appointments:
+            return {"msg": "No appointments found for the doctor."}, 404
+
+        result = [
+            {
+                "apt_id": apt.apt_id,
+                "user_id": apt.user_id,
+                "start_time": apt.start_time,
+                "end_time": apt.end_time,
+                "created_at": apt.created_at
+            } for apt in appointments
+        ]
+        return jsonify(result)
 
 class CreateAppointment(Resource):
     def post(self):
-        return {"msg":"Appointment Created"}, 201
+        data = request.get_json()
+        user_id = data.get('user_id')
+        doctor_id = data.get('doctor_id')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+
+        if not (user_id and doctor_id and start_time and end_time):
+            return {"msg": "Missing required fields."}, 400
+
+        new_appointment = Appointment(
+            user_id=user_id,
+            doctor_id=doctor_id,
+            start_time=datetime.datetime.fromisoformat(start_time),
+            end_time=datetime.datetime.fromisoformat(end_time)
+        )
+
+        session.add(new_appointment)
+        session.commit()
+        return {"msg": "Appointment Created", "apt_id": new_appointment.apt_id}, 201
 
 class UpdateAppointment(Resource):
-    def put(self):
-        return {"msg":"Appointment Updated"}, 200
+    def put(self, apt_id):
+        data = request.get_json()
+        appointment = session.query(Appointment).filter_by(apt_id=apt_id).first()
+
+        if not appointment:
+            return {"msg": "Appointment not found."}, 404
+
+        appointment.start_time = datetime.datetime.fromisoformat(data.get('start_time', appointment.start_time.isoformat()))
+        appointment.end_time = datetime.datetime.fromisoformat(data.get('end_time', appointment.end_time.isoformat()))
+
+        session.commit()
+        return {"msg": "Appointment Updated", "apt_id": apt_id}, 200
 
 class DeleteAppointment(Resource):
     def delete(self, apt_id):
-        return {"msg":"Appointment Deleted"}, 200
+        appointment = session.query(Appointment).filter_by(apt_id=apt_id).first()
+
+        if not appointment:
+            return {"msg": "Appointment not found."}, 404
+
+        session.delete(appointment)
+        session.commit()
+        return {"msg": "Appointment Deleted", "apt_id": apt_id}, 200
 
 api.add_resource(UserAppointments, '/appointments/user/<int:user_id>')
 api.add_resource(DoctorAppointments, '/appointments/doctor/<int:doctor_id>')
