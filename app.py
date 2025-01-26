@@ -66,6 +66,12 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
+def has_clash(time_slots, user_start, user_end):
+    return any(
+        (start <= user_end and end >= user_start)
+        for start, end in time_slots
+    )
+
 class UserAppointments(Resource):
     def get(self, user_id):
         """
@@ -271,6 +277,15 @@ class CreateAppointment(Resource):
         doctor = session.query(Doctor).filter_by(doctor_id=doctor_id).all()
         if not doctor:
             return {"msg": "Doctor not found."}, 404
+          
+        if start_time > end_time:
+          return {"msg": "Invalid time range."}, 200
+        
+        appointments = session.query(Appointment).filter_by(doctor_id=doctor_id)
+        booked_slots = [(apt.start_time, apt.end_time) for apt in appointments]
+        
+        if has_clash(booked_slots, start_time, end_time):
+          return {"msg": "Time slot already booked."}, 200
 
         new_appointment = Appointment(
             user_id=user_id,
@@ -304,12 +319,12 @@ class UpdateAppointment(Resource):
                 start_time:
                   type: string
                   format: date-time
-                  example: 2022-01-01T16:00:00
+                  example: '2022-01-01T16:00:00'
                   description: The new start time of the appointment
                 end_time:
                   type: string
                   format: date-time
-                  example: 2022-01-01T17:00:00
+                  example: '2022-01-01T17:00:00'
                   description: The new end time of the appointment
         responses:
           200:
@@ -335,13 +350,29 @@ class UpdateAppointment(Resource):
                   description: Error message indicating the appointment was not found.
         """
         data = request.get_json()
+        
         appointment = session.query(Appointment).filter_by(apt_id=apt_id).first()
 
         if not appointment:
             return {"msg": "Appointment not found."}, 404
-
-        appointment.start_time = datetime.datetime.fromisoformat(data.get('start_time', appointment.start_time.isoformat()))
-        appointment.end_time = datetime.datetime.fromisoformat(data.get('end_time', appointment.end_time.isoformat()))
+          
+        start_time = datetime.datetime.fromisoformat(data.get('start_time', appointment.start_time.isoformat()))
+        end_time = datetime.datetime.fromisoformat(data.get('end_time', appointment.end_time.isoformat()))
+        
+        if start_time > end_time:
+          return {"msg": "Invalid time range."}, 200
+          
+        old_appointment = session.get(Appointment, apt_id)
+        doctor_id = old_appointment.doctor_id
+          
+        appointments = session.query(Appointment).filter_by(doctor_id=doctor_id).all()
+        booked_slots = [(apt.start_time, apt.end_time) for apt in appointments]
+        
+        if has_clash(booked_slots, start_time, end_time):
+          return {"msg": "Time slot already booked."}, 200
+        
+        appointment.start_time = start_time
+        appointment.end_time = end_time
 
         session.commit()
         return {"msg": "Appointment Updated", "apt_id": apt_id}, 200
