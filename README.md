@@ -34,8 +34,8 @@ Ensure you have the following installed:
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/hospital-appointment-management.git
-cd hospital-appointment-management
+git clone https://github.com/Tejax-v2/Mediversal_Appointment_API.git
+cd Mediversal_Appointment_API
 ```
 
 ## Install Dependencies
