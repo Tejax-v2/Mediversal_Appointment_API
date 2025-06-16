@@ -429,4 +429,6 @@ api.add_resource(UpdateAppointment, '/appointments/<int:apt_id>')
 api.add_resource(DeleteAppointment, '/appointments/<int:apt_id>')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    import os
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
+    app.run(debug=debug_mode)
