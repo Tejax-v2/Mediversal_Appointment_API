@@ -16,7 +16,7 @@ packaging==24.2
 pytz==2024.2
 PyYAML==6.0.2
 referencing==0.36.2
-rpds-py==0.22.3
+rpds-py==0.25.1
 six==1.17.0
 SQLAlchemy==2.0.37
 typing_extensions==4.12.2
