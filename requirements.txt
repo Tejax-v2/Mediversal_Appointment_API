@@ -7,7 +7,7 @@ Flask==3.1.0
 Flask-RESTful==0.3.10
 greenlet==3.2.3
 itsdangerous==2.2.0
-Jinja2==3.1.5
+Jinja2==3.1.6
 jsonschema==4.23.0
 jsonschema-specifications==2025.4.1
 MarkupSafe==3.0.2
