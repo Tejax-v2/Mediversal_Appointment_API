@@ -13,7 +13,7 @@ jsonschema-specifications==2025.4.1
 MarkupSafe==3.0.2
 mistune==3.1.0
 packaging==25.0
-pytz==2024.2
+pytz==2025.2
 PyYAML==6.0.2
 referencing==0.36.2
 rpds-py==0.25.1
